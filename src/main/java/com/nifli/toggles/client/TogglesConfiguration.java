@@ -18,10 +18,13 @@ package com.nifli.toggles.client;
 public class TogglesConfiguration
 {
 	private static final String DEFAULT_TOKEN_ENDPOINT = "https://api.nifli.com/oauth/token";
+	private static final int DEFAULT_RETRIES = 2;
 
 	private char[] clientId;
 	private char[] clientSecret;
 	private String tokenEndpoint = DEFAULT_TOKEN_ENDPOINT;
+	private int maxRetries = DEFAULT_RETRIES;
+
 
 	public TogglesConfiguration()
 	{
@@ -49,6 +52,13 @@ public class TogglesConfiguration
 		return this;
 	}
 
+	public TogglesConfiguration setMaxRetries(int maxRetries)
+	{
+		assert(maxRetries >= 0);
+		this.maxRetries = maxRetries;
+		return this;
+	}
+
 	public char[] getClientId()
 	{
 		return clientId;
@@ -62,6 +72,11 @@ public class TogglesConfiguration
 	public String getTokenEndpoint()
 	{
 		return tokenEndpoint;
+	}
+
+	public int getMaxRetries()
+	{
+		return maxRetries;
 	}
 
 	public TogglesClient newClient()
