@@ -15,6 +15,8 @@
 */
 package com.nifli.toggles.client;
 
+import com.nifli.toggles.client.domain.TokenManager;
+
 /**
  * @author tfredrich
  *
@@ -22,6 +24,7 @@ package com.nifli.toggles.client;
 public class TogglesClient
 {
 	private TogglesConfiguration config;
+	private TokenManager tokens;
 
 	public TogglesClient(char[] clientId, char[] clientSecret)
 	{
@@ -35,6 +38,7 @@ public class TogglesClient
 	{
 		super();
 		this.config = togglesConfiguration;
+		this.tokens = new RemoteTokenManager(togglesConfiguration);
 	}
 
 	public boolean isEnabled(String featureId, boolean defaultValue)
