@@ -18,6 +18,6 @@ package com.nifli.toggles.client.domain;
 /**
  * @author tfredrich
  */
-public class Account {
-
+public class Account
+{
 }

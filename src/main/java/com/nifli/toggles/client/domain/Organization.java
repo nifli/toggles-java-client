@@ -18,6 +18,7 @@ package com.nifli.toggles.client.domain;
 /**
  * @author tfredrich
  */
-public class Organization {
+public class Organization
+{
 
 }
