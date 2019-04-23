@@ -18,17 +18,23 @@ package com.nifli.toggles.client;
 public class TogglesConfiguration
 {
 	private static final String DEFAULT_TOKEN_ENDPOINT = "https://api.nifli.com/oauth/token";
+	private static final String TOGGLES_ENDPOINT_TEMPLATE = "https://api.nifli.com/stages/%s/features";
 	private static final int DEFAULT_RETRIES = 2;
+	private static final String DEFAULT_STAGE = "development";
 
 	private char[] clientId;
 	private char[] clientSecret;
 	private String tokenEndpoint = DEFAULT_TOKEN_ENDPOINT;
+	private String togglesEndpointTemplate = TOGGLES_ENDPOINT_TEMPLATE;
+	private String togglesEndpoint;
 	private int maxRetries = DEFAULT_RETRIES;
+	private String stage = DEFAULT_STAGE;
 
 
 	public TogglesConfiguration()
 	{
 		super();
+		togglesEndpoint = String.format(togglesEndpointTemplate, stage);
 	}
 
 	public TogglesConfiguration setClientId(char[] clientId)
@@ -52,10 +58,25 @@ public class TogglesConfiguration
 		return this;
 	}
 
+	public TogglesConfiguration setTogglesEndpointTemplate(String togglesTemplateUrl)
+	{
+		assert(togglesTemplateUrl != null);
+		this.togglesEndpointTemplate = togglesTemplateUrl;
+		this.togglesEndpoint = String.format(this.togglesEndpointTemplate, getStage());
+		return this;
+	}
+
 	public TogglesConfiguration setMaxRetries(int maxRetries)
 	{
 		assert(maxRetries >= 0);
 		this.maxRetries = maxRetries;
+		return this;
+	}
+
+	public TogglesConfiguration setStage(String stage)
+	{
+		this.stage = stage;
+		togglesEndpoint = String.format(togglesEndpointTemplate, stage);
 		return this;
 	}
 
@@ -74,9 +95,19 @@ public class TogglesConfiguration
 		return tokenEndpoint;
 	}
 
+	public String getTogglesEndpoint()
+	{
+		return togglesEndpoint;
+	}
+
 	public int getMaxRetries()
 	{
 		return maxRetries;
+	}
+
+	public String getStage()
+	{
+		return stage;
 	}
 
 	public TogglesClient newClient()

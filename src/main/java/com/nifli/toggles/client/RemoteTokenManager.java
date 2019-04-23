@@ -5,9 +5,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.stream.Collectors;
 
-import org.apache.http.HttpHeaders;
-import org.apache.http.entity.ContentType;
-
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
@@ -31,17 +28,19 @@ implements TokenManager
 
 	@Override
 	public String getAccessToken()
+	throws TokenManagerException
 	{
 		if (accessToken == null)
 		{
-			accessToken = newAccessToken();
+			newAccessToken();
 		}
 
 		return accessToken;
 	}
 
 	@Override
-	public String newAccessToken()
+	public void newAccessToken()
+	throws TokenManagerException
 	{
 		int retries = config.getMaxRetries();
 		HttpResponse<TokenResponse> response = null;
@@ -52,18 +51,16 @@ implements TokenManager
 			{
 				response = Unirest.post(config.getTokenEndpoint())
 					.basicAuth(new String(config.getClientId()), new String(config.getClientSecret()))
-					.header(HttpHeaders.CONTENT_TYPE, "application/json")
 					.field("grant_type", GRANT_TYPE)
-					.field("scopes", SCOPES)
+					.field("scope", SCOPES)
 					.asObject(TokenResponse.class);
 	
 				if (isSuccessful(response))
 				{
-					return response.getBody().getAccessToken();
+					setAccessToken(response.getBody().getAccessToken());
 				}
 				else if (isFatal(response))
 				{
-//					LOG.fatal(String.format("Unable to get a token. Status: %d - %s", response.getStatus(), response.getBody().getMessage()));
 					throwException(response);
 				}
 			}
@@ -72,6 +69,13 @@ implements TokenManager
 		{
 			throw new TokenManagerException(e);
 		}
+
+		throwException(response);
+	}
+
+	private void setAccessToken(String token)
+	{
+		this.accessToken = "Bearer " + token;
 	}
 
 	private boolean isSuccessful(HttpResponse<TokenResponse> response)
@@ -79,7 +83,13 @@ implements TokenManager
 		return response.getStatus() >= 200 && response.getStatus() <= 299;
 	}
 
+	private boolean isFatal(HttpResponse<TokenResponse> response)
+	{
+		return response.getStatus() == 401 || response.getStatus() == 403;
+	}
+
 	private void throwException(HttpResponse<TokenResponse> response)
+	throws TokenManagerException
 	{
 		try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getRawBody())))
 		{
@@ -89,4 +99,5 @@ implements TokenManager
 		{
 			throw new TokenManagerException(e);
 		}
+	}
 }

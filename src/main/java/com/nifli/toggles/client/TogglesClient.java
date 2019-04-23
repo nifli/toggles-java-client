@@ -15,6 +15,12 @@
 */
 package com.nifli.toggles.client;
 
+import org.apache.http.HttpHeaders;
+
+import com.mashape.unirest.http.HttpResponse;
+import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.http.exceptions.UnirestException;
+import com.nifli.toggles.client.domain.Toggles;
 import com.nifli.toggles.client.domain.TokenManager;
 
 /**
@@ -41,13 +47,62 @@ public class TogglesClient
 		this.tokens = new RemoteTokenManager(togglesConfiguration);
 	}
 
+	public TogglesClient setStage(String stage)
+	{
+		this.config.setStage(stage);
+		return this;
+	}
+
 	public boolean isEnabled(String featureId, boolean defaultValue)
 	{
-		return defaultValue;
+		return isEnabled(featureId, null, defaultValue);
 	}
 
 	public boolean isEnabled(String featureId, TogglesContext context, boolean defaultValue)
 	{
+		int retries = config.getMaxRetries();
+		HttpResponse<Toggles> response = null;
+
+		try
+		{
+			while (--retries >= 0)
+			{
+				response = Unirest.get(config.getTogglesEndpoint())
+					.header(HttpHeaders.AUTHORIZATION, tokens.getAccessToken())
+					.asObject(Toggles.class);
+	
+				if (response.getStatus() == 401) // assume needs a token refresh
+				{
+					tokens.newAccessToken();
+				}
+				else if (isSuccessful(response))
+				{
+					return processContext(response.getBody(), context, defaultValue);
+				}
+			}
+		}
+		catch (UnirestException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch (TokenManagerException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 		return defaultValue;
+	}
+
+	private boolean processContext(Toggles body, TogglesContext context, boolean defaultValue)
+	{
+		// TODO Auto-generated method stub
+		return defaultValue;
+	}
+
+	private boolean isSuccessful(HttpResponse<Toggles> response)
+	{
+		return response.getStatus() >= 200 && response.getStatus() <= 299;
 	}
 }
