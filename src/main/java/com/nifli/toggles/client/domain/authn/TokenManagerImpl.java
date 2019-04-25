@@ -1,4 +1,4 @@
-package com.nifli.toggles.client;
+package com.nifli.toggles.client.domain.authn;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -8,8 +8,7 @@ import java.util.stream.Collectors;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
-import com.nifli.toggles.client.domain.authn.TokenManager;
-import com.nifli.toggles.client.domain.authn.TokenResponse;
+import com.nifli.toggles.client.TogglesConfiguration;
 
 /**
  * Acquires 'client_credentials' tokens (JWT) from the OAuth2 token endpoint. It does not validate the token or refresh it.

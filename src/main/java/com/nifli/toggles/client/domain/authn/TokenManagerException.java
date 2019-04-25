@@ -1,4 +1,4 @@
-package com.nifli.toggles.client;
+package com.nifli.toggles.client.domain.authn;
 
 public class TokenManagerException
 extends Exception

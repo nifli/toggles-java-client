@@ -1,7 +1,5 @@
 package com.nifli.toggles.client.domain.authn;
 
-import com.nifli.toggles.client.TokenManagerException;
-
 public interface TokenManager
 {
 	/**
