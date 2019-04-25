@@ -21,17 +21,24 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.nifli.toggles.client.domain.Toggles;
-import com.nifli.toggles.client.domain.TokenManager;
+import com.nifli.toggles.client.domain.authn.TokenManager;
 
 /**
+ * The controlling class for all feature flag decisions.
+ * 
  * @author tfredrich
- *
  */
 public class TogglesClient
 {
 	private TogglesConfiguration config;
 	private TokenManager tokens;
 
+	/**
+	 * Create a new feature flag client with default configuration, using the clientId and secret for this application.
+	 * 
+	 * @param clientId
+	 * @param clientSecret
+	 */
 	public TogglesClient(char[] clientId, char[] clientSecret)
 	{
 		this(new TogglesConfiguration()
@@ -40,24 +47,52 @@ public class TogglesClient
 		);
 	}
 
+	/**
+	 * Create a new feature flag client, specifying configuration details in a TogglesConfiguration instance.
+	 * 
+	 * @param togglesConfiguration
+	 */
 	public TogglesClient(TogglesConfiguration togglesConfiguration)
 	{
 		super();
 		this.config = togglesConfiguration;
-		this.tokens = new RemoteTokenManager(togglesConfiguration);
+		this.tokens = new TokenManagerImpl(togglesConfiguration);
 	}
 
+	/**
+	 * Set which development stage (e.g. dev, test, prod) this client is working against.
+	 * 
+	 * @param stage the 'slug' name of the desired stage. 
+	 * @return this TogglesClient instance to facilitate method chaining.
+	 */
 	public TogglesClient setStage(String stage)
 	{
 		this.config.setStage(stage);
 		return this;
 	}
 
+	/**
+	 * Answer whether this feature is enabled in this stage for this application. If the flag is not able to be retrieved
+	 * from the remote API, returns the defaultValue.
+	 * 
+	 * @param featureId either the UUID identifier for the feature or the 'slug' name.
+	 * @param defaultValue boolean value to return if unable to retrieve the setting from the API.
+	 * @return true if the feature is enabled for this application in the stage.
+	 */
 	public boolean isEnabled(String featureId, boolean defaultValue)
 	{
 		return isEnabled(featureId, null, defaultValue);
 	}
 
+	/**
+	 * Answer whether this feature is enabled in this stage for this application, using the additional context to test against
+	 * feature activation strategies. If the flag is not able to be retrieved from the remote API, returns the defaultValue.
+	 * 
+	 * @param featureId either the UUID identifier for the feature or the 'slug' name.
+	 * @param context additional contextual values to test against feature-activation strategies.
+	 * @param defaultValue boolean value to return if unable to retrieve the setting from the API.
+	 * @return true if the feature is enabled for this application in the stage, given the context.
+	 */
 	public boolean isEnabled(String featureId, TogglesContext context, boolean defaultValue)
 	{
 		int retries = config.getMaxRetries();
