@@ -20,10 +20,10 @@ import org.apache.http.HttpHeaders;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import com.nifli.toggles.client.authn.TokenManager;
+import com.nifli.toggles.client.authn.TokenManagerException;
+import com.nifli.toggles.client.authn.TokenManagerImpl;
 import com.nifli.toggles.client.domain.Toggles;
-import com.nifli.toggles.client.domain.authn.TokenManager;
-import com.nifli.toggles.client.domain.authn.TokenManagerException;
-import com.nifli.toggles.client.domain.authn.TokenManagerImpl;
 
 /**
  * The controlling class for all feature flag decisions.

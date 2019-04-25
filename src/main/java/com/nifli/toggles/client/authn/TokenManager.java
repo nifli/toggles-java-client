@@ -1,4 +1,4 @@
-package com.nifli.toggles.client.domain.authn;
+package com.nifli.toggles.client.authn;
 
 public interface TokenManager
 {
