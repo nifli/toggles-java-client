@@ -59,17 +59,17 @@ public class TogglesConfiguration
 		return this;
 	}
 
-	public TogglesConfiguration setClientId(char[] clientId)
+	public TogglesConfiguration setClientId(String clientId)
 	{
 		assert(clientId != null);
-		this.clientId = clientId;
+		this.clientId = clientId.toCharArray();
 		return this;
 	}
 
-	public TogglesConfiguration setClientSecret(char[] clientSecret)
+	public TogglesConfiguration setClientSecret(String clientSecret)
 	{
 		assert(clientSecret != null);
-		this.clientSecret = clientSecret;
+		this.clientSecret = clientSecret.toCharArray();
 		return this;
 	}
 
@@ -94,14 +94,14 @@ public class TogglesConfiguration
 		return this;
 	}
 
-	public char[] getClientId()
+	public String getClientId()
 	{
-		return clientId;
+		return new String(clientId);
 	}
 
-	public char[] getClientSecret()
+	public String getClientSecret()
 	{
-		return clientSecret;
+		return new String(clientSecret);
 	}
 
 	public String getTokenEndpoint()

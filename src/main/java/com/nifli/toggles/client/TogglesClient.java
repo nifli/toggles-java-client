@@ -51,7 +51,7 @@ public class TogglesClient
 	 * @param clientId
 	 * @param clientSecret
 	 */
-	public TogglesClient(char[] clientId, char[] clientSecret)
+	public TogglesClient(String clientId, String clientSecret)
 	{
 		this(new TogglesConfiguration()
 			.setClientId(clientId)

@@ -75,7 +75,7 @@ implements TokenManager
 			while (retries-- >= 0)
 			{
 				response = Unirest.post(config.getTokenEndpoint())
-					.basicAuth(new String(config.getClientId()), new String(config.getClientSecret()))
+					.basicAuth(config.getClientId(), config.getClientSecret())
 			        .header("accept", "application/json")
 					.field("grant_type", GRANT_TYPE)
 					.field("scope", SCOPE)
