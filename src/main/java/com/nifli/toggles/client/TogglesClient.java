@@ -17,12 +17,20 @@ package com.nifli.toggles.client;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 
 import org.apache.http.HttpHeaders;
+import org.ehcache.Cache;
+import org.ehcache.CacheManager;
+import org.ehcache.config.builders.CacheConfigurationBuilder;
+import org.ehcache.config.builders.CacheManagerBuilder;
+import org.ehcache.config.builders.ExpiryPolicyBuilder;
+import org.ehcache.config.builders.ResourcePoolsBuilder;
+import org.ehcache.expiry.ExpiryPolicy;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -42,8 +50,12 @@ import com.nifli.toggles.client.domain.StageToggles;
  */
 public class TogglesClient
 {
+	private static final String TOGGLES_CACHE_NAME = "com.nifli.toggles.client.cache";
+
 	private TogglesConfiguration config;
 	private TokenManager tokens;
+	private CacheManager cacheManager;
+	private Cache<String, StageToggles> togglesByClientId;
 
 	/**
 	 * Create a new feature flag client with default configuration, using the clientId and secret for this application.
@@ -69,6 +81,8 @@ public class TogglesClient
 		super();
 		this.config = togglesConfiguration;
 		this.tokens = new TokenManagerImpl(togglesConfiguration);
+		this.cacheManager = CacheManagerBuilder.newCacheManagerBuilder().build();
+		this.cacheManager.init();
 
 		//TODO: Wrap ObjectMapper
 		Unirest.setObjectMapper(new ObjectMapper()
@@ -156,41 +170,50 @@ public class TogglesClient
 	 */
 	public boolean isEnabled(String featureName, TogglesContext context, boolean defaultValue)
 	{
-		int retries = config.getMaxRetries();
-		HttpResponse<StageToggles> response = null;
-
 		try
 		{
-			while (--retries >= 0)
-			{
-				response = Unirest.get(config.getTogglesEndpoint())
-					.header(HttpHeaders.AUTHORIZATION, tokens.getAccessToken())
-			        .header("accept", "application/json")
-			        .header("Content-Type", "application/json")
-					.asObject(StageToggles.class);
-	
-				if (response.getStatus() == 401) // assume needs a token refresh
-				{
-					tokens.newAccessToken();
-				}
-				else if (isSuccessful(response))
-				{
-					return processContext(featureName, response.getBody(), context, defaultValue);
-				}
-			}
+			StageToggles toggles = getToggles();
+
+			if (toggles == null) return defaultValue;
+
+			return processContext(featureName, toggles, context, defaultValue);
 		}
-		catch (UnirestException e)
+		catch (UnirestException | TokenManagerException e1)
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		catch (TokenManagerException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			// TODO log exceptions
+			e1.printStackTrace();
 		}
 
 		return defaultValue;
+	}
+
+	private StageToggles getToggles()
+	throws UnirestException, TokenManagerException
+	{
+		if (togglesByClientId == null)
+		{
+			ExpiryPolicy<Object, Object> expiry = ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofMillis(config.getCacheTtlMillis()));
+			this.togglesByClientId = cacheManager.createCache(TOGGLES_CACHE_NAME,
+				CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class,
+					StageToggles.class,
+					ResourcePoolsBuilder.heap(10))
+				.withExpiry(expiry)
+				.build()); 
+		}
+
+		StageToggles toggles = togglesByClientId.get(config.getClientId());
+
+		if (toggles == null)
+		{
+			toggles = getRemoteToggles();
+
+			if (toggles != null)
+			{
+				togglesByClientId.put(config.getClientId(), toggles);
+			}
+		}
+
+		return toggles;
 	}
 
 	private boolean processContext(String featureName, StageToggles toggles, TogglesContext context, boolean defaultValue)
@@ -198,6 +221,33 @@ public class TogglesClient
 		Boolean enabled = toggles.isFeatureEnabled(featureName);
 
 		return (enabled != null ? enabled : defaultValue);
+	}
+
+	private StageToggles getRemoteToggles()
+	throws UnirestException, TokenManagerException
+	{
+		int retries = config.getMaxRetries();
+		HttpResponse<StageToggles> response = null;
+
+		while (retries-- >= 0)
+		{
+			response = Unirest.get(config.getTogglesEndpoint())
+				.header(HttpHeaders.AUTHORIZATION, tokens.getAccessToken())
+		        .header("accept", "application/json")
+		        .header("Content-Type", "application/json")
+				.asObject(StageToggles.class);
+
+			if (response.getStatus() == 401) // assume needs a token refresh
+			{
+				tokens.newAccessToken();
+			}
+			else if (isSuccessful(response))
+			{
+				return response.getBody();
+			}
+		}
+
+		return null;
 	}
 
 	private boolean isSuccessful(HttpResponse<StageToggles> response)

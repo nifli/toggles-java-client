@@ -24,6 +24,7 @@ public class TogglesConfiguration
 	private static final int DEFAULT_RETRIES = 3;
 	private static final long DEFAULT_RETRY_DELAY_MILLIS = 10l;
 	private static final String DEFAULT_STAGE = "development";
+	private static final long DEFAULT_CACHE_TTL_MILLIS = 1000l;
 
 	private char[] clientId;
 	private char[] clientSecret;
@@ -35,6 +36,7 @@ public class TogglesConfiguration
 	private int maxRetries = DEFAULT_RETRIES;
 	private long retryDelayMillis = DEFAULT_RETRY_DELAY_MILLIS;
 	private String stage = DEFAULT_STAGE;
+	private long cacheTtlMillis = DEFAULT_CACHE_TTL_MILLIS;
 
 
 	public TogglesConfiguration()
@@ -70,6 +72,13 @@ public class TogglesConfiguration
 	{
 		assert(clientSecret != null);
 		this.clientSecret = clientSecret.toCharArray();
+		return this;
+	}
+
+	public TogglesConfiguration setCacheTtlMillis(long cacheTtlMillis)
+	{
+		assert(cacheTtlMillis >= 10l);
+		this.cacheTtlMillis = cacheTtlMillis;
 		return this;
 	}
 
@@ -132,6 +141,11 @@ public class TogglesConfiguration
 	public TogglesClient newClient()
 	{
 		return new TogglesClient(this);
+	}
+
+	public long getCacheTtlMillis()
+	{
+		return cacheTtlMillis;
 	}
 
 	private void refresh()
