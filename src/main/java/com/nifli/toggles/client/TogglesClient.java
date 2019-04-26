@@ -15,9 +15,19 @@
 */
 package com.nifli.toggles.client;
 
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+
 import org.apache.http.HttpHeaders;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.mashape.unirest.http.HttpResponse;
+import com.mashape.unirest.http.ObjectMapper;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.nifli.toggles.client.authn.TokenManager;
@@ -59,6 +69,55 @@ public class TogglesClient
 		super();
 		this.config = togglesConfiguration;
 		this.tokens = new TokenManagerImpl(togglesConfiguration);
+
+		//TODO: Wrap ObjectMapper
+		Unirest.setObjectMapper(new ObjectMapper()
+		{
+			private com.fasterxml.jackson.databind.ObjectMapper jacksonObjectMapper = new com.fasterxml.jackson.databind.ObjectMapper()
+				.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+	
+				// Ignore additional/unknown properties in a payload.
+				.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+				
+				// Only serialize populated properties (do no serialize nulls)
+				.setSerializationInclusion(JsonInclude.Include.NON_NULL)
+				
+				// Use fields directly.
+				.setVisibility(PropertyAccessor.FIELD, Visibility.ANY)
+				
+				// Ignore accessor and mutator methods (use fields per above).
+				.setVisibility(PropertyAccessor.GETTER, Visibility.NONE)
+				.setVisibility(PropertyAccessor.SETTER, Visibility.NONE)
+				.setVisibility(PropertyAccessor.IS_GETTER, Visibility.NONE)
+				
+				// Set default ISO 8601 timepoint output format.
+				.setDateFormat(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'"));
+
+
+			public <T> T readValue(String value, Class<T> valueType)
+			{
+				try
+				{
+					return jacksonObjectMapper.readValue(value, valueType);
+				}
+				catch (IOException e)
+				{
+					throw new RuntimeException(e);
+				}
+			}
+
+			public String writeValue(Object value)
+			{
+				try
+				{
+					return jacksonObjectMapper.writeValueAsString(value);
+				}
+				catch (JsonProcessingException e)
+				{
+					throw new RuntimeException(e);
+				}
+			}
+		});
 	}
 
 	/**
@@ -106,6 +165,8 @@ public class TogglesClient
 			{
 				response = Unirest.get(config.getTogglesEndpoint())
 					.header(HttpHeaders.AUTHORIZATION, tokens.getAccessToken())
+			        .header("accept", "application/json")
+			        .header("Content-Type", "application/json")
 					.asObject(Toggles.class);
 	
 				if (response.getStatus() == 401) // assume needs a token refresh
