@@ -17,16 +17,13 @@ package com.nifli.toggles.client;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.time.Duration;
 
 import org.apache.http.HttpHeaders;
 import org.ehcache.Cache;
 import org.ehcache.CacheManager;
 import org.ehcache.config.builders.CacheConfigurationBuilder;
 import org.ehcache.config.builders.CacheManagerBuilder;
-import org.ehcache.config.builders.ExpiryPolicyBuilder;
 import org.ehcache.config.builders.ResourcePoolsBuilder;
-import org.ehcache.expiry.ExpiryPolicy;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -55,6 +52,7 @@ public class TogglesClient
 	private TogglesConfiguration config;
 	private TokenManager tokens;
 	private CacheManager cacheManager;
+	private long cacheExpiresAt;
 	private Cache<String, StageToggles> togglesByClientId;
 
 	/**
@@ -192,25 +190,37 @@ public class TogglesClient
 	{
 		if (togglesByClientId == null)
 		{
-			ExpiryPolicy<Object, Object> expiry = ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofMillis(config.getCacheTtlMillis()));
 			this.togglesByClientId = cacheManager.createCache(TOGGLES_CACHE_NAME,
 				CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class,
 					StageToggles.class,
 					ResourcePoolsBuilder.heap(10))
-				.withExpiry(expiry)
 				.build()); 
 		}
 
 		StageToggles toggles = togglesByClientId.get(config.getClientId());
 
-		if (toggles == null)
+		if (shouldRefresh(toggles))
 		{
-			toggles = getRemoteToggles();
+			toggles = refreshCache();
+		}
 
-			if (toggles != null)
-			{
-				togglesByClientId.put(config.getClientId(), toggles);
-			}
+		return toggles;
+	}
+
+	private boolean shouldRefresh(StageToggles toggles)
+	{
+		return (toggles == null || cacheExpiresAt == 0l || System.currentTimeMillis() > cacheExpiresAt);
+	}
+
+	private StageToggles refreshCache()
+	throws UnirestException, TokenManagerException
+	{
+		StageToggles toggles = getRemoteToggles();
+
+		if (toggles != null)
+		{
+			togglesByClientId.put(config.getClientId(), toggles);
+			cacheExpiresAt = System.currentTimeMillis() + config.getCacheTtlMillis();
 		}
 
 		return toggles;
