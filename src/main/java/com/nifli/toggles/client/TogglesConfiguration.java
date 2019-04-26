@@ -17,8 +17,9 @@ package com.nifli.toggles.client;
 
 public class TogglesConfiguration
 {
-	private static final String DEFAULT_BASE_URL = "https://api.nifli.com";
-	private static final String TOKEN_PATH = "/oauth/token";
+	private static final String DEFAULT_BASE_TOKEN_URL = "https://api.nifli.com";
+	private static final String DEFAULT_BASE_TOGGLES_URL = "https://api.nifli.com";
+	private static final String TOKEN_PATH = "/token";
 	private static final String TOGGLES_PATH_TEMPLATE = "/stages/%s/features";
 	private static final int DEFAULT_RETRIES = 3;
 	private static final long DEFAULT_RETRY_DELAY_MILLIS = 10l;
@@ -26,10 +27,11 @@ public class TogglesConfiguration
 
 	private char[] clientId;
 	private char[] clientSecret;
-	private String baseUrl = DEFAULT_BASE_URL;
-	private String tokenEndpoint;			// Computed using baseUrl;
-	private String togglesEndpointTemplate; // Computed using baseUrl;
-	private String togglesEndpoint;			// Computed using baseUrl;
+	private String baseTokenUrl = DEFAULT_BASE_TOKEN_URL;
+	private String baseTogglesUrl = DEFAULT_BASE_TOGGLES_URL;
+	private String tokenEndpoint;			// Computed using baseTokenUrl;
+	private String togglesEndpointTemplate; // Computed using baseTogglesUrl;
+	private String togglesEndpoint;			// Computed using baseTogglesUrl;
 	private int maxRetries = DEFAULT_RETRIES;
 	private long retryDelayMillis = DEFAULT_RETRY_DELAY_MILLIS;
 	private String stage = DEFAULT_STAGE;
@@ -38,14 +40,22 @@ public class TogglesConfiguration
 	public TogglesConfiguration()
 	{
 		super();
-		computeUrls();
+		refresh();
 	}
 
-	public TogglesConfiguration setBaseUrl(String baseUrl)
+	public TogglesConfiguration setBaseTokenUrl(String baseUrl)
 	{
 		assert(baseUrl != null);
-		this.baseUrl = baseUrl;
-		computeUrls();
+		this.baseTokenUrl = baseUrl;
+		refresh();
+		return this;
+	}
+
+	public TogglesConfiguration setBaseTogglesUrl(String baseUrl)
+	{
+		assert(baseUrl != null);
+		this.baseTogglesUrl = baseUrl;
+		refresh();
 		return this;
 	}
 
@@ -61,13 +71,6 @@ public class TogglesConfiguration
 		assert(clientSecret != null);
 		this.clientSecret = clientSecret;
 		return this;
-	}
-
-	private void computeUrls()
-	{
-		this.tokenEndpoint = baseUrl + TOKEN_PATH;
-		this.togglesEndpointTemplate = baseUrl + TOGGLES_PATH_TEMPLATE;
-		this.togglesEndpoint = String.format(this.togglesEndpointTemplate, getStage());
 	}
 
 	public TogglesConfiguration setMaxRetries(int maxRetries)
@@ -87,7 +90,7 @@ public class TogglesConfiguration
 	public TogglesConfiguration setStage(String stage)
 	{
 		this.stage = stage;
-		togglesEndpoint = String.format(togglesEndpointTemplate, stage);
+		refresh();
 		return this;
 	}
 
@@ -129,5 +132,12 @@ public class TogglesConfiguration
 	public TogglesClient newClient()
 	{
 		return new TogglesClient(this);
+	}
+
+	private void refresh()
+	{
+		this.tokenEndpoint = baseTokenUrl + TOKEN_PATH;
+		this.togglesEndpointTemplate = baseTogglesUrl + TOGGLES_PATH_TEMPLATE;
+		this.togglesEndpoint = String.format(this.togglesEndpointTemplate, getStage());
 	}
 }
