@@ -76,6 +76,7 @@ implements TokenManager
 			{
 				response = Unirest.post(config.getTokenEndpoint())
 					.basicAuth(new String(config.getClientId()), new String(config.getClientSecret()))
+			        .header("accept", "application/json")
 					.field("grant_type", GRANT_TYPE)
 					.field("scope", SCOPE)
 					.asObject(TokenResponse.class);
@@ -83,7 +84,7 @@ implements TokenManager
 				if (isSuccessful(response))
 				{
 					setAccessToken(response.getBody().getAccessToken());
-					break;
+					return;
 				}
 				else if (isFatal(response)) // Don't retry
 				{
