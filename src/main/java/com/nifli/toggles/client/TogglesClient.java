@@ -33,7 +33,7 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import com.nifli.toggles.client.authn.TokenManager;
 import com.nifli.toggles.client.authn.TokenManagerException;
 import com.nifli.toggles.client.authn.TokenManagerImpl;
-import com.nifli.toggles.client.domain.Toggles;
+import com.nifli.toggles.client.domain.StageToggles;
 
 /**
  * The controlling class for all feature flag decisions.
@@ -136,28 +136,28 @@ public class TogglesClient
 	 * Answer whether this feature is enabled in this stage for this application. If the flag is not able to be retrieved
 	 * from the remote API, returns the defaultValue.
 	 * 
-	 * @param featureId either the UUID identifier for the feature or the 'slug' name.
+	 * @param featureName the textual name of the feature.
 	 * @param defaultValue boolean value to return if unable to retrieve the setting from the API.
 	 * @return true if the feature is enabled for this application in the stage.
 	 */
-	public boolean isEnabled(String featureId, boolean defaultValue)
+	public boolean isEnabled(String featureName, boolean defaultValue)
 	{
-		return isEnabled(featureId, null, defaultValue);
+		return isEnabled(featureName, null, defaultValue);
 	}
 
 	/**
 	 * Answer whether this feature is enabled in this stage for this application, using the additional context to test against
 	 * feature activation strategies. If the flag is not able to be retrieved from the remote API, returns the defaultValue.
 	 * 
-	 * @param featureId either the UUID identifier for the feature or the 'slug' name.
+	 * @param featureName the textual name of the feature.
 	 * @param context additional contextual values to test against feature-activation strategies.
 	 * @param defaultValue boolean value to return if unable to retrieve the setting from the API.
 	 * @return true if the feature is enabled for this application in the stage, given the context.
 	 */
-	public boolean isEnabled(String featureId, TogglesContext context, boolean defaultValue)
+	public boolean isEnabled(String featureName, TogglesContext context, boolean defaultValue)
 	{
 		int retries = config.getMaxRetries();
-		HttpResponse<Toggles> response = null;
+		HttpResponse<StageToggles> response = null;
 
 		try
 		{
@@ -167,7 +167,7 @@ public class TogglesClient
 					.header(HttpHeaders.AUTHORIZATION, tokens.getAccessToken())
 			        .header("accept", "application/json")
 			        .header("Content-Type", "application/json")
-					.asObject(Toggles.class);
+					.asObject(StageToggles.class);
 	
 				if (response.getStatus() == 401) // assume needs a token refresh
 				{
@@ -175,7 +175,7 @@ public class TogglesClient
 				}
 				else if (isSuccessful(response))
 				{
-					return processContext(response.getBody(), context, defaultValue);
+					return processContext(featureName, response.getBody(), context, defaultValue);
 				}
 			}
 		}
@@ -193,13 +193,14 @@ public class TogglesClient
 		return defaultValue;
 	}
 
-	private boolean processContext(Toggles body, TogglesContext context, boolean defaultValue)
+	private boolean processContext(String featureName, StageToggles toggles, TogglesContext context, boolean defaultValue)
 	{
-		// TODO Auto-generated method stub
-		return defaultValue;
+		Boolean enabled = toggles.isFeatureEnabled(featureName);
+
+		return (enabled != null ? enabled : defaultValue);
 	}
 
-	private boolean isSuccessful(HttpResponse<Toggles> response)
+	private boolean isSuccessful(HttpResponse<StageToggles> response)
 	{
 		return response.getStatus() >= 200 && response.getStatus() <= 299;
 	}
