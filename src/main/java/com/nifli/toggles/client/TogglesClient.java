@@ -81,55 +81,7 @@ public class TogglesClient
 		this.tokens = new TokenManagerImpl(togglesConfiguration);
 		this.cacheManager = CacheManagerBuilder.newCacheManagerBuilder().build();
 		this.cacheManager.init();
-
-		//TODO: Wrap ObjectMapper
-		Unirest.setObjectMapper(new ObjectMapper()
-		{
-			private com.fasterxml.jackson.databind.ObjectMapper jacksonObjectMapper = new com.fasterxml.jackson.databind.ObjectMapper()
-				.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
-	
-				// Ignore additional/unknown properties in a payload.
-				.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-				
-				// Only serialize populated properties (do no serialize nulls)
-				.setSerializationInclusion(JsonInclude.Include.NON_NULL)
-				
-				// Use fields directly.
-				.setVisibility(PropertyAccessor.FIELD, Visibility.ANY)
-				
-				// Ignore accessor and mutator methods (use fields per above).
-				.setVisibility(PropertyAccessor.GETTER, Visibility.NONE)
-				.setVisibility(PropertyAccessor.SETTER, Visibility.NONE)
-				.setVisibility(PropertyAccessor.IS_GETTER, Visibility.NONE)
-				
-				// Set default ISO 8601 timepoint output format.
-				.setDateFormat(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'"));
-
-
-			public <T> T readValue(String value, Class<T> valueType)
-			{
-				try
-				{
-					return jacksonObjectMapper.readValue(value, valueType);
-				}
-				catch (IOException e)
-				{
-					throw new RuntimeException(e);
-				}
-			}
-
-			public String writeValue(Object value)
-			{
-				try
-				{
-					return jacksonObjectMapper.writeValueAsString(value);
-				}
-				catch (JsonProcessingException e)
-				{
-					throw new RuntimeException(e);
-				}
-			}
-		});
+		configureJacksonObjectMapper();
 	}
 
 	/**
@@ -142,6 +94,21 @@ public class TogglesClient
 	{
 		this.config.setStage(stage);
 		return this;
+	}
+
+	/**
+	 * Answer whether this feature is enabled in this stage for this application. If the flag is not able to be retrieved
+	 * from the remote API, returns the false (as the default value).
+	 * 
+	 * Same as calling isEnabled(featureName, false).
+	 * 
+	 * @param featureName the textual name of the feature.
+	 * @return true if the feature is enabled for this application in the stage. Otherwise, false. If the feature flag
+	 * setting was unable to be retrieved from the remote API, returns false (as the default value).
+	 */
+	public boolean isEnabled(String featureName)
+	{
+		return isEnabled(featureName, null);
 	}
 
 	/**
@@ -159,10 +126,25 @@ public class TogglesClient
 
 	/**
 	 * Answer whether this feature is enabled in this stage for this application, using the additional context to test against
+	 * feature activation strategies. If the flag is not able to be retrieved from the remote API, returns false.
+	 * 
+	 * Same as calling isEnabled(featureName, context, false)
+	 * 
+	 * @param featureName the textual name of the feature.
+	 * @param context additional contextual values to test against feature-activation strategies. Possibly null.
+	 * @return true if the feature is enabled for this application in the stage, given the context. Otherwise, false.
+	 */
+	public boolean isEnabled(String featureName, TogglesContext context)
+	{
+		return isEnabled(featureName, context, false);
+	}
+
+	/**
+	 * Answer whether this feature is enabled in this stage for this application, using the additional context to test against
 	 * feature activation strategies. If the flag is not able to be retrieved from the remote API, returns the defaultValue.
 	 * 
 	 * @param featureName the textual name of the feature.
-	 * @param context additional contextual values to test against feature-activation strategies.
+	 * @param context additional contextual values to test against feature-activation strategies. Possibly null.
 	 * @param defaultValue boolean value to return if unable to retrieve the setting from the API.
 	 * @return true if the feature is enabled for this application in the stage, given the context.
 	 */
@@ -263,5 +245,56 @@ public class TogglesClient
 	private boolean isSuccessful(HttpResponse<StageToggles> response)
 	{
 		return response.getStatus() >= 200 && response.getStatus() <= 299;
+	}
+
+	private void configureJacksonObjectMapper()
+	{
+		Unirest.setObjectMapper(new ObjectMapper()
+		{
+			private com.fasterxml.jackson.databind.ObjectMapper jacksonObjectMapper = new com.fasterxml.jackson.databind.ObjectMapper()
+				.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+	
+				// Ignore additional/unknown properties in a payload.
+				.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+				
+				// Only serialize populated properties (do no serialize nulls)
+				.setSerializationInclusion(JsonInclude.Include.NON_NULL)
+				
+				// Use fields directly.
+				.setVisibility(PropertyAccessor.FIELD, Visibility.ANY)
+				
+				// Ignore accessor and mutator methods (use fields per above).
+				.setVisibility(PropertyAccessor.GETTER, Visibility.NONE)
+				.setVisibility(PropertyAccessor.SETTER, Visibility.NONE)
+				.setVisibility(PropertyAccessor.IS_GETTER, Visibility.NONE)
+				
+				// Set default ISO 8601 timepoint output format.
+				.setDateFormat(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'"));
+
+
+			public <T> T readValue(String value, Class<T> valueType)
+			{
+				try
+				{
+					return jacksonObjectMapper.readValue(value, valueType);
+				}
+				catch (IOException e)
+				{
+					throw new RuntimeException(e);
+				}
+			}
+
+			public String writeValue(Object value)
+			{
+				try
+				{
+					return jacksonObjectMapper.writeValueAsString(value);
+				}
+				catch (JsonProcessingException e)
+				{
+					throw new RuntimeException(e);
+				}
+			}
+		});
 	}
 }
