@@ -29,7 +29,8 @@ TogglesConfiguration config = new TogglesConfiguration(
 	.setStage("production")
 	.setCacheTtlMillis(600000) // 10 minutes.
 	.setMaxRetries(5)
-	.setRetryDelay(30l);
+	.setRetryDelay(30l)
+	.setShouldFetchOnStartup(true);
 
 TogglesClient toggles = new TogglesClient(config);
 // or...
