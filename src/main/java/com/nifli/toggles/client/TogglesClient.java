@@ -58,8 +58,8 @@ public class TogglesClient
 	/**
 	 * Create a new feature flag client with default configuration, using the clientId and secret for this application.
 	 * 
-	 * @param clientId
-	 * @param clientSecret
+	 * @param clientId a client ID acquired from registering an application.
+	 * @param clientSecret the secret for the associated client ID, provided when registering an application.
 	 */
 	public TogglesClient(String clientId, String clientSecret)
 	{
@@ -69,7 +69,8 @@ public class TogglesClient
 	/**
 	 * Create a new feature flag client, specifying configuration details in a TogglesConfiguration instance.
 	 * 
-	 * @param togglesConfiguration
+	 * @param togglesConfiguration a TogglesConfiguration instance. Never null.
+	 * @see {@link TogglesConfiguration.newInstance()}
 	 */
 	public TogglesClient(TogglesConfiguration togglesConfiguration)
 	{

@@ -38,7 +38,12 @@ public class TogglesConfiguration
 	private String stage = DEFAULT_STAGE;
 	private long cacheTtlMillis = DEFAULT_CACHE_TTL_MILLIS;
 
-
+	/**
+	 * Create a new feature flag configuration instance using the clientId and secret for this application.
+	 * 
+	 * @param clientId a client ID acquired from registering an application.
+	 * @param clientSecret the secret for the associated client ID, provided when registering an application.
+	 */
 	public TogglesConfiguration(String clientId, String clientSecret)
 	{
 		super();
@@ -117,8 +122,16 @@ public class TogglesConfiguration
 		return this;
 	}
 
+	/**
+	 * Set the stage (e.g. development, test, production) that this client is working against.
+	 * The default value is 'development'.
+	 * 
+	 * @param stage a string name of a valid stage in this account. Never null.
+	 * @return this TogglesConfiguration instance for method chaining.
+	 */
 	public TogglesConfiguration setStage(String stage)
 	{
+		assert(stage != null);
 		this.stage = stage;
 		refresh();
 		return this;
@@ -181,6 +194,9 @@ public class TogglesConfiguration
 		this.clientSecret = clientSecret.toCharArray();
 	}
 
+	/**
+	 * Recomputes the endpoint instance variables whenever something related within this configuration changes.
+	 */
 	private void refresh()
 	{
 		this.tokenEndpoint = baseTokenUrl + TOKEN_PATH;
