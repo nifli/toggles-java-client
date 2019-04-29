@@ -39,12 +39,20 @@ public class TogglesConfiguration
 	private long cacheTtlMillis = DEFAULT_CACHE_TTL_MILLIS;
 
 
-	public TogglesConfiguration()
+	public TogglesConfiguration(String clientId, String clientSecret)
 	{
 		super();
+		setClientId(clientId);
+		setClientSecret(clientSecret);
 		refresh();
 	}
 
+	/**
+	 * Facilitates testing.
+	 * 
+	 * @param baseUrl
+	 * @return this TogglesConfiguration instance for method chaining.
+	 */
 	public TogglesConfiguration setBaseTokenUrl(String baseUrl)
 	{
 		assert(baseUrl != null);
@@ -53,6 +61,12 @@ public class TogglesConfiguration
 		return this;
 	}
 
+	/**
+	 * Facilitates testing.
+	 * 
+	 * @param baseUrl
+	 * @return this TogglesConfiguration instance for method chaining.
+	 */
 	public TogglesConfiguration setBaseTogglesUrl(String baseUrl)
 	{
 		assert(baseUrl != null);
@@ -61,27 +75,27 @@ public class TogglesConfiguration
 		return this;
 	}
 
-	public TogglesConfiguration setClientId(String clientId)
-	{
-		assert(clientId != null);
-		this.clientId = clientId.toCharArray();
-		return this;
-	}
-
-	public TogglesConfiguration setClientSecret(String clientSecret)
-	{
-		assert(clientSecret != null);
-		this.clientSecret = clientSecret.toCharArray();
-		return this;
-	}
-
+	/**
+	 * Set the length of time in milliseconds that the cached feature flag data is considered active.
+	 * Note that this TTL only causes the client to request an update instead of deleting the cache values.
+	 * This enables the client to operate consistently even if the remote API is unreachable.
+	 * 
+	 * @param cacheTtlMillis a long value greater-than or equal-to zero indicating how frequently to refresh the cache.
+	 * @return this TogglesConfiguration instance for method chaining.
+	 */
 	public TogglesConfiguration setCacheTtlMillis(long cacheTtlMillis)
 	{
-		assert(cacheTtlMillis >= 10l);
+		assert(cacheTtlMillis >= 0l);
 		this.cacheTtlMillis = cacheTtlMillis;
 		return this;
 	}
 
+	/**
+	 * Set the maximum number of retries the client will attempt retry-able requests before considering the request a failure.
+	 * 
+	 * @param maxRetries a long value greater-than or equal-to zero.
+	 * @return this TogglesConfiguration instance for method chaining.
+	 */
 	public TogglesConfiguration setMaxRetries(int maxRetries)
 	{
 		assert(maxRetries >= 0);
@@ -89,9 +103,16 @@ public class TogglesConfiguration
 		return this;
 	}
 
-	public TogglesConfiguration setRetryDelay(long retryDelayMillis)
+	/**
+	 * Set the initial retry delay in milliseconds. This value is used for the first delay before retry.
+	 * Subsequent delay values (for this request) will be multiples of this value.
+	 * 
+	 * @param retryDelayMillis a long value greater-than or equal-to zero.
+	 * @return this TogglesConfiguration instance for method chaining.
+	 */
+	public TogglesConfiguration setRetryDelayMillis(long retryDelayMillis)
 	{
-		assert(retryDelayMillis >= 10l);
+		assert(retryDelayMillis >= 0l);
 		this.retryDelayMillis = retryDelayMillis;
 		return this;
 	}
@@ -146,6 +167,18 @@ public class TogglesConfiguration
 	public long getCacheTtlMillis()
 	{
 		return cacheTtlMillis;
+	}
+
+	private void setClientId(String clientId)
+	{
+		assert(clientId != null);
+		this.clientId = clientId.toCharArray();
+	}
+
+	private void setClientSecret(String clientSecret)
+	{
+		assert(clientSecret != null);
+		this.clientSecret = clientSecret.toCharArray();
 	}
 
 	private void refresh()

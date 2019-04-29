@@ -63,10 +63,7 @@ public class TogglesClient
 	 */
 	public TogglesClient(String clientId, String clientSecret)
 	{
-		this(new TogglesConfiguration()
-			.setClientId(clientId)
-			.setClientSecret(clientSecret)
-		);
+		this(new TogglesConfiguration(clientId, clientSecret));
 	}
 
 	/**
