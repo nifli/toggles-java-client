@@ -17,6 +17,7 @@ package com.nifli.toggles.client;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import org.apache.http.HttpHeaders;
 import org.ehcache.Cache;
@@ -48,6 +49,10 @@ import com.nifli.toggles.client.domain.StageToggles;
 public class TogglesClient
 {
 	private static final String TOGGLES_CACHE_NAME = "com.nifli.toggles.client.cache";
+	private static final String TOGGLES_CLIENT_NAME = "toggles-client-java";
+
+	private Date createdAt = new Date(System.currentTimeMillis());
+	private String version; //TODO: inject pom version number here.
 
 	private TogglesConfiguration config;
 	private TokenManager tokens;
@@ -62,6 +67,7 @@ public class TogglesClient
 	 * @param clientSecret the secret for the associated client ID, provided when registering an application.
 	 */
 	public TogglesClient(String clientId, String clientSecret)
+	throws UnirestException, TokenManagerException
 	{
 		this(new TogglesConfiguration(clientId, clientSecret));
 	}
@@ -70,9 +76,12 @@ public class TogglesClient
 	 * Create a new feature flag client, specifying configuration details in a TogglesConfiguration instance.
 	 * 
 	 * @param togglesConfiguration a TogglesConfiguration instance. Never null.
+	 * @throws TokenManagerException 
+	 * @throws UnirestException 
 	 * @see {@link TogglesConfiguration.newInstance()}
 	 */
 	public TogglesClient(TogglesConfiguration togglesConfiguration)
+	throws UnirestException, TokenManagerException
 	{
 		super();
 		this.config = togglesConfiguration;
@@ -80,6 +89,11 @@ public class TogglesClient
 		this.cacheManager = CacheManagerBuilder.newCacheManagerBuilder().build();
 		this.cacheManager.init();
 		configureJacksonObjectMapper();
+
+		if (config.shouldFetchOnStartup())
+		{
+			fetchToggles();
+		}
 	}
 
 	/**
@@ -150,7 +164,7 @@ public class TogglesClient
 	{
 		try
 		{
-			StageToggles toggles = getToggles();
+			StageToggles toggles = fetchToggles();
 
 			if (toggles == null) return defaultValue;
 
@@ -165,7 +179,17 @@ public class TogglesClient
 		return defaultValue;
 	}
 
-	private StageToggles getToggles()
+	public Date getCreatedAt()
+	{
+		return createdAt;
+	}
+
+	public String getVersion()
+	{
+		return String.format("%s:%s", TOGGLES_CLIENT_NAME, version);
+	}
+
+	private StageToggles fetchToggles()
 	throws UnirestException, TokenManagerException
 	{
 		if (togglesByClientId == null)
@@ -173,8 +197,8 @@ public class TogglesClient
 			this.togglesByClientId = cacheManager.createCache(TOGGLES_CACHE_NAME,
 				CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class,
 					StageToggles.class,
-					ResourcePoolsBuilder.heap(10))
-				.build()); 
+					ResourcePoolsBuilder.heap(1))
+				.build());
 		}
 
 		StageToggles toggles = togglesByClientId.get(config.getClientId());

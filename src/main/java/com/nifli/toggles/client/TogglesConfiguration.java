@@ -15,6 +15,9 @@
 */
 package com.nifli.toggles.client;
 
+import com.mashape.unirest.http.exceptions.UnirestException;
+import com.nifli.toggles.client.authn.TokenManagerException;
+
 public class TogglesConfiguration
 {
 	private static final String DEFAULT_BASE_TOKEN_URL = "https://api.nifli.com";
@@ -28,6 +31,7 @@ public class TogglesConfiguration
 
 	private char[] clientId;
 	private char[] clientSecret;
+	private String instanceId;
 	private String baseTokenUrl = DEFAULT_BASE_TOKEN_URL;
 	private String baseTogglesUrl = DEFAULT_BASE_TOGGLES_URL;
 	private String tokenEndpoint;			// Computed using baseTokenUrl;
@@ -37,6 +41,7 @@ public class TogglesConfiguration
 	private long retryDelayMillis = DEFAULT_RETRY_DELAY_MILLIS;
 	private String stage = DEFAULT_STAGE;
 	private long cacheTtlMillis = DEFAULT_CACHE_TTL_MILLIS;
+	private boolean shouldFetchOnStartup = false;
 
 	/**
 	 * Create a new feature flag configuration instance using the clientId and secret for this application.
@@ -77,6 +82,39 @@ public class TogglesConfiguration
 		assert(baseUrl != null);
 		this.baseTogglesUrl = baseUrl;
 		refresh();
+		return this;
+	}
+
+	/**
+	 * Set a unique ID for this application instance. When multiple instances of a particular application
+	 * are running, it is sometime useful to distinguish the instances from one another in logs and metrics.
+	 * If set, this value is passed along to the Nifli Toggles API with metrics publishing for analytics review.
+	 * 
+	 * Examples for values are hostname, podId, IP address, etc.
+	 * 
+	 * @param instanceId a customer-defined string. Possibly null.
+	 * @return this TogglesConfiguration instance for method chaining.
+	 */
+	public TogglesConfiguration setInstanceId(String instanceId)
+	{
+		this.instanceId = instanceId;
+		return this;
+	}
+
+	/**
+	 * By default, Toggles will fetch the feature toggles settings from the remote API on the first
+	 * call to isEnabled(). This first call can have considerable latency due to the JSON deserialization
+	 * classes that must be loaded by the JVM class loader.
+	 * 
+	 * To reduce this latency, TogglesClient can load the feature toggles upon startup, moving the latency
+	 * to application startup instead of the initial call to isEnabled(). 
+	 * 
+	 * @param value true to load feature toggles on application startup.
+	 * @return this TogglesConfiguration instance for method chaining.
+	 */
+	public TogglesConfiguration setShouldFetchOnStartup(boolean value)
+	{
+		this.shouldFetchOnStartup = value;
 		return this;
 	}
 
@@ -173,6 +211,7 @@ public class TogglesConfiguration
 	}
 
 	public TogglesClient newClient()
+	throws UnirestException, TokenManagerException
 	{
 		return new TogglesClient(this);
 	}
@@ -180,6 +219,16 @@ public class TogglesConfiguration
 	public long getCacheTtlMillis()
 	{
 		return cacheTtlMillis;
+	}
+
+	public String getInstanceId()
+	{
+		return instanceId;
+	}
+
+	public boolean shouldFetchOnStartup()
+	{
+		return shouldFetchOnStartup;
 	}
 
 	private void setClientId(String clientId)
