@@ -32,6 +32,8 @@ TogglesConfiguration config = new TogglesConfiguration(
 	.setRetryDelay(30l);
 
 TogglesClient toggles = new TogglesClient(config);
+// or...
+TogglesClient toggles = config.newClient();
 ```
 
 ### Feature toggle API
