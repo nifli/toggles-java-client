@@ -88,6 +88,7 @@ public class TogglesClient
 		this.tokens = new TokenManagerImpl(togglesConfiguration);
 		this.cacheManager = CacheManagerBuilder.newCacheManagerBuilder().build();
 		this.cacheManager.init();
+		Unirest.setTimeouts(config.getConnectionTimeoutMillis(), config.getSocketTimeoutMillis());
 		configureJacksonObjectMapper();
 
 		if (config.shouldFetchOnStartup())

@@ -28,6 +28,8 @@ public class TogglesConfiguration
 	private static final long DEFAULT_RETRY_DELAY_MILLIS = 10l;
 	private static final String DEFAULT_STAGE = "development";
 	private static final long DEFAULT_CACHE_TTL_MILLIS = 1000l;
+	private static final long DEFAULT_CONNECTION_TIMEOUT = 10000l;
+	private static final long DEFAULT_SOCKET_TIMEOUT = 60000l;
 
 	private char[] clientId;
 	private char[] clientSecret;
@@ -42,6 +44,8 @@ public class TogglesConfiguration
 	private String stage = DEFAULT_STAGE;
 	private long cacheTtlMillis = DEFAULT_CACHE_TTL_MILLIS;
 	private boolean shouldFetchOnStartup = false;
+	private long connectionTimeoutMillis = DEFAULT_CONNECTION_TIMEOUT;
+	private long socketTimeoutMillis = DEFAULT_SOCKET_TIMEOUT;
 
 	/**
 	 * Create a new feature flag configuration instance using the clientId and secret for this application.
@@ -160,6 +164,20 @@ public class TogglesConfiguration
 		return this;
 	}
 
+	public TogglesConfiguration setConnectionTimeoutMillis(long connectionTimeoutMillis)
+	{
+		assert(connectionTimeoutMillis >= 0l);
+		this.connectionTimeoutMillis = connectionTimeoutMillis;
+		return this;
+	}
+
+	public TogglesConfiguration setSocketTimeoutMillis(long socketTimeoutMillis)
+	{
+		assert(socketTimeoutMillis >= 0l);
+		this.socketTimeoutMillis = socketTimeoutMillis;
+		return this;
+	}
+
 	/**
 	 * Set the stage (e.g. development, test, production) that this client is working against.
 	 * The default value is 'development'.
@@ -229,6 +247,16 @@ public class TogglesConfiguration
 	public boolean shouldFetchOnStartup()
 	{
 		return shouldFetchOnStartup;
+	}
+
+	public long getConnectionTimeoutMillis()
+	{
+		return connectionTimeoutMillis;
+	}
+
+	public long getSocketTimeoutMillis()
+	{
+		return socketTimeoutMillis;
 	}
 
 	private void setClientId(String clientId)
