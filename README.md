@@ -1,6 +1,6 @@
-# toggles-java-client
+# The Nifli.com Feature Toggle Client for Java
 
-This is the java client for Nifli.com Feature Toggles (aka Toggles).
+[Nifli.com](https://nifli.com) offers Feature Flags (aka Feature Toggles) for B2B SaaS companies. This is the java client for [Nifli.com](https://nifli.com) Feature Toggles (herein called Toggles).
 
 ## Getting started
 
