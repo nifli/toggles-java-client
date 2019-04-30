@@ -24,13 +24,13 @@ TogglesClient toggles = new TogglesClient("qT4b805OQpyg-e0CifyD8c", "njI2_AsBpHT
 or create a TogglesConfiguration instance, which allows tweaking settings within the client.
 ```java
 TogglesConfiguration config = new TogglesConfiguration(
-		"qT4b805OQpyg-e0CifyD8c",           // Client ID
-		"njI2_AsBpHTiNYVL-KaBOoHLoiFsoU-1") // Client Secret
-	.setStage("production")
-	.setCacheTtlMillis(600000) // 10 minutes.
-	.setMaxRetries(5)
-	.setRetryDelay(30l)
-	.setShouldFetchOnStartup(true);
+		"qT4b805OQpyg-e0CifyD8c",           // Client ID, required.
+		"njI2_AsBpHTiNYVL-KaBOoHLoiFsoU-1") // Client Secret, required.
+	.setStage("production")                 // Default is 'development'
+	.setCacheTtlMillis(600000l)             // Default is 10 minutes (600,000ms).
+	.setMaxRetries(5)                       // Default is 5.
+	.setRetryDelayMillis(30l)               // Default is 30ms.
+	.setShouldFetchOnStartup(true);         // Default is true.
 
 TogglesClient toggles = new TogglesClient(config);
 // or...

@@ -24,7 +24,7 @@ public class TogglesConfiguration
 	private static final int DEFAULT_RETRIES = 5;
 	private static final long DEFAULT_RETRY_DELAY_MILLIS = 30l;
 	private static final String DEFAULT_STAGE = "development";
-	private static final long DEFAULT_CACHE_TTL_MILLIS = 100000l;
+	private static final long DEFAULT_CACHE_TTL_MILLIS = 600000l;
 	private static final long DEFAULT_CONNECTION_TIMEOUT = 10000l;
 	private static final long DEFAULT_SOCKET_TIMEOUT = 60000l;
 
