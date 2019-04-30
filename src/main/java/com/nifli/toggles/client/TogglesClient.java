@@ -67,7 +67,7 @@ public class TogglesClient
 	 * @param clientSecret the secret for the associated client ID, provided when registering an application.
 	 */
 	public TogglesClient(String clientId, String clientSecret)
-	throws UnirestException, TokenManagerException
+	throws ClientException, TokenManagerException
 	{
 		this(new TogglesConfiguration(clientId, clientSecret));
 	}
@@ -77,11 +77,11 @@ public class TogglesClient
 	 * 
 	 * @param togglesConfiguration a TogglesConfiguration instance. Never null.
 	 * @throws TokenManagerException 
-	 * @throws UnirestException 
-	 * @see {@link TogglesConfiguration.newInstance()}
+	 * @throws ClientException if an error occurs during fetching of the remote toggles.
+	 * @see {@link TogglesConfiguration.newClient()}
 	 */
 	public TogglesClient(TogglesConfiguration togglesConfiguration)
-	throws UnirestException, TokenManagerException
+	throws ClientException
 	{
 		super();
 		this.config = togglesConfiguration;
@@ -171,10 +171,10 @@ public class TogglesClient
 
 			return processContext(featureName, toggles, context, defaultValue);
 		}
-		catch (UnirestException | TokenManagerException e1)
+		catch (ClientException e)
 		{
 			// TODO log exceptions
-			e1.printStackTrace();
+			e.printStackTrace();
 		}
 
 		return defaultValue;
@@ -191,7 +191,7 @@ public class TogglesClient
 	}
 
 	private StageToggles fetchToggles()
-	throws UnirestException, TokenManagerException
+	throws ClientException
 	{
 		if (togglesByClientId == null)
 		{
@@ -218,7 +218,7 @@ public class TogglesClient
 	}
 
 	private StageToggles refreshCache()
-	throws UnirestException, TokenManagerException
+	throws ClientException
 	{
 		StageToggles toggles = getRemoteToggles();
 
@@ -239,27 +239,34 @@ public class TogglesClient
 	}
 
 	private StageToggles getRemoteToggles()
-	throws UnirestException, TokenManagerException
+	throws ClientException
 	{
 		int retries = config.getMaxRetries();
 		HttpResponse<StageToggles> response = null;
 
-		while (retries-- >= 0)
+		try
 		{
-			response = Unirest.get(config.getTogglesEndpoint())
-				.header(HttpHeaders.AUTHORIZATION, tokens.getAccessToken())
-		        .header("accept", "application/json")
-		        .header("Content-Type", "application/json")
-				.asObject(StageToggles.class);
-
-			if (response.getStatus() == 401) // assume needs a token refresh
+			while (retries-- >= 0)
 			{
-				tokens.newAccessToken();
+					response = Unirest.get(config.getTogglesEndpoint())
+						.header(HttpHeaders.AUTHORIZATION, tokens.getAccessToken())
+					    .header("accept", "application/json")
+					    .header("Content-Type", "application/json")
+						.asObject(StageToggles.class);
+	
+					if (response.getStatus() == 401) // assume needs a token refresh
+					{
+						tokens.newAccessToken();
+					}
+					else if (isSuccessful(response))
+					{
+						return response.getBody();
+					}
 			}
-			else if (isSuccessful(response))
-			{
-				return response.getBody();
-			}
+		}
+		catch (UnirestException e)
+		{
+			throw new ClientException(e);
 		}
 
 		return null;

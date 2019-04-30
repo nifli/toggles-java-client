@@ -15,19 +15,16 @@
 */
 package com.nifli.toggles.client;
 
-import com.mashape.unirest.http.exceptions.UnirestException;
-import com.nifli.toggles.client.authn.TokenManagerException;
-
 public class TogglesConfiguration
 {
 	private static final String DEFAULT_BASE_TOKEN_URL = "https://api.nifli.com";
 	private static final String DEFAULT_BASE_TOGGLES_URL = "https://api.nifli.com";
 	private static final String TOKEN_PATH = "/token";
 	private static final String TOGGLES_PATH_TEMPLATE = "/stages/%s/features";
-	private static final int DEFAULT_RETRIES = 3;
-	private static final long DEFAULT_RETRY_DELAY_MILLIS = 10l;
+	private static final int DEFAULT_RETRIES = 5;
+	private static final long DEFAULT_RETRY_DELAY_MILLIS = 30l;
 	private static final String DEFAULT_STAGE = "development";
-	private static final long DEFAULT_CACHE_TTL_MILLIS = 1000l;
+	private static final long DEFAULT_CACHE_TTL_MILLIS = 100000l;
 	private static final long DEFAULT_CONNECTION_TIMEOUT = 10000l;
 	private static final long DEFAULT_SOCKET_TIMEOUT = 60000l;
 
@@ -43,7 +40,7 @@ public class TogglesConfiguration
 	private long retryDelayMillis = DEFAULT_RETRY_DELAY_MILLIS;
 	private String stage = DEFAULT_STAGE;
 	private long cacheTtlMillis = DEFAULT_CACHE_TTL_MILLIS;
-	private boolean shouldFetchOnStartup = false;
+	private boolean shouldFetchOnStartup = true;
 	private long connectionTimeoutMillis = DEFAULT_CONNECTION_TIMEOUT;
 	private long socketTimeoutMillis = DEFAULT_SOCKET_TIMEOUT;
 
@@ -229,7 +226,7 @@ public class TogglesConfiguration
 	}
 
 	public TogglesClient newClient()
-	throws UnirestException, TokenManagerException
+	throws ClientException
 	{
 		return new TogglesClient(this);
 	}
