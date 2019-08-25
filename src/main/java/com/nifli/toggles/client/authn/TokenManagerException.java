@@ -1,12 +1,12 @@
 package com.nifli.toggles.client.authn;
 
-import com.nifli.toggles.client.ClientException;
+import com.nifli.toggles.client.TogglesException;
 
 public class TokenManagerException
-extends ClientException
+extends TogglesException
 {
-	private static final long serialVersionUID = -7332781700724233007L;
-	
+	private static final long serialVersionUID = 8042743696336541838L;
+
 	private Integer httpStatus;
 
 	public TokenManagerException(Exception e)

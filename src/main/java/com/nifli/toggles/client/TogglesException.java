@@ -13,50 +13,24 @@
 	See the License for the specific language governing permissions and
 	limitations under the License.
 */
-package com.nifli.toggles.client.domain;
-
-import java.util.Collection;
+package com.nifli.toggles.client;
 
 /**
  * @author toddf
- * @since Apr 26, 2019
+ * @since Apr 30, 2019
  */
-public abstract class AbstractToggleResponse
+public class TogglesException
+extends Exception
 {
-	private String id;
-	private String name;
-	private String slug;
-	private String description;
-	private boolean enabled;
-	private Collection<Strategy> strategies;
+	private static final long serialVersionUID = 8358780884094452562L;
 
-	public String getId()
+	public TogglesException(Exception e)
 	{
-		return id;
+		super(e);
 	}
 
-	public String getName()
+	public TogglesException(String message)
 	{
-		return name;
-	}
-
-	public String getSlug()
-	{
-		return slug;
-	}
-
-	public String getDescription()
-	{
-		return description;
-	}
-
-	public Collection<Strategy> getStrategies()
-	{
-		return strategies;
-	}
-
-	public boolean isEnabled()
-	{
-		return enabled;
+		super(message);
 	}
 }

@@ -26,4 +26,17 @@ public class Strategy
 	private String id;
 	private String name;
 	private Map<String, String> parameters;
+
+	public String getId()
+	{
+		return id;
+	}
+	public String getName()
+	{
+		return name;
+	}
+	public Map<String, String> getParameters()
+	{
+		return parameters;
+	}
 }

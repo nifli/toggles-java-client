@@ -15,18 +15,25 @@
 */
 package com.nifli.toggles.client;
 
+import com.nifli.toggles.client.event.DefaultEventHandler;
+import com.nifli.toggles.client.event.DefaultEventObserver;
+import com.nifli.toggles.client.event.EventHandler;
+
 public class TogglesConfiguration
 {
 	private static final String DEFAULT_BASE_TOKEN_URL = "https://api.nifli.com";
 	private static final String DEFAULT_BASE_TOGGLES_URL = "https://api.nifli.com";
 	private static final String TOKEN_PATH = "/token";
 	private static final String TOGGLES_PATH_TEMPLATE = "/stages/%s/features";
+	private static final String METRICS_PATH_TEMPLATE = "/stages/%s/metrics";
 	private static final int DEFAULT_RETRIES = 5;
 	private static final long DEFAULT_RETRY_DELAY_MILLIS = 30l;
 	private static final String DEFAULT_STAGE = "development";
 	private static final long DEFAULT_CACHE_TTL_MILLIS = 600000l;
 	private static final long DEFAULT_CONNECTION_TIMEOUT = 10000l;
 	private static final long DEFAULT_SOCKET_TIMEOUT = 60000l;
+	private static final long DEFAULT_METRICS_PUBLISH_INTERVAL = 30l;
+	private static final long DEFAULT_EVENT_POLL_INTERVAL = 0l;
 
 	private char[] clientId;
 	private char[] clientSecret;
@@ -34,8 +41,8 @@ public class TogglesConfiguration
 	private String baseTokenUrl = DEFAULT_BASE_TOKEN_URL;
 	private String baseTogglesUrl = DEFAULT_BASE_TOGGLES_URL;
 	private String tokenEndpoint;			// Computed using baseTokenUrl;
-	private String togglesEndpointTemplate; // Computed using baseTogglesUrl;
 	private String togglesEndpoint;			// Computed using baseTogglesUrl;
+	private String metricsEndpoint;			// Computed using baseTogglesUrl;
 	private int maxRetries = DEFAULT_RETRIES;
 	private long retryDelayMillis = DEFAULT_RETRY_DELAY_MILLIS;
 	private String stage = DEFAULT_STAGE;
@@ -43,7 +50,9 @@ public class TogglesConfiguration
 	private boolean shouldFetchOnStartup = true;
 	private long connectionTimeoutMillis = DEFAULT_CONNECTION_TIMEOUT;
 	private long socketTimeoutMillis = DEFAULT_SOCKET_TIMEOUT;
-
+	private long metricsPublishIntervalSeconds = DEFAULT_METRICS_PUBLISH_INTERVAL;
+	private long eventPollIntervalMillis = DEFAULT_EVENT_POLL_INTERVAL;
+	private EventHandler eventHandler = new DefaultEventHandler(new DefaultEventObserver());
 	/**
 	 * Create a new feature flag configuration instance using the clientId and secret for this application.
 	 * 
@@ -210,6 +219,11 @@ public class TogglesConfiguration
 		return togglesEndpoint;
 	}
 
+	public String getMetricsEndpoint()
+	{
+		return metricsEndpoint;
+	}
+
 	public int getMaxRetries()
 	{
 		return maxRetries;
@@ -226,7 +240,7 @@ public class TogglesConfiguration
 	}
 
 	public TogglesClient newClient()
-	throws ClientException
+	throws TogglesException
 	{
 		return new TogglesClient(this);
 	}
@@ -274,7 +288,18 @@ public class TogglesConfiguration
 	private void refresh()
 	{
 		this.tokenEndpoint = baseTokenUrl + TOKEN_PATH;
-		this.togglesEndpointTemplate = baseTogglesUrl + TOGGLES_PATH_TEMPLATE;
-		this.togglesEndpoint = String.format(this.togglesEndpointTemplate, getStage());
+		this.togglesEndpoint = String.format(baseTogglesUrl + TOGGLES_PATH_TEMPLATE, getStage());
+		this.metricsEndpoint = String.format(baseTogglesUrl + METRICS_PATH_TEMPLATE, getStage());
 	}
+
+	public long getEventPollIntervalMillis()
+	{
+		return eventPollIntervalMillis;
+	}
+
+	public EventHandler getEventHandler()
+	{
+		return eventHandler;
+	}
+
 }

@@ -17,9 +17,11 @@ package com.nifli.toggles.client;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.Date;
 
-import org.apache.http.HttpHeaders;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.ehcache.Cache;
 import org.ehcache.CacheManager;
 import org.ehcache.config.builders.CacheConfigurationBuilder;
@@ -32,14 +34,16 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.ObjectMapper;
 import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.exceptions.UnirestException;
 import com.nifli.toggles.client.authn.TokenManager;
 import com.nifli.toggles.client.authn.TokenManagerException;
 import com.nifli.toggles.client.authn.TokenManagerImpl;
 import com.nifli.toggles.client.domain.StageToggles;
+import com.nifli.toggles.client.event.Events;
+import com.nifli.toggles.client.event.LocalEventBus;
+import com.nifli.toggles.client.metrics.MetricsEventHandler;
+import com.nifli.toggles.client.metrics.MetricsPublisher;
 
 /**
  * The controlling class for all feature flag decisions.
@@ -48,6 +52,8 @@ import com.nifli.toggles.client.domain.StageToggles;
  */
 public class TogglesClient
 {
+	private static final Logger LOG = LogManager.getLogger(TogglesClient.class);
+
 	private static final String TOGGLES_CACHE_NAME = "com.nifli.toggles.client.cache";
 	private static final String TOGGLES_CLIENT_NAME = "toggles-client-java";
 
@@ -56,6 +62,8 @@ public class TogglesClient
 
 	private TogglesConfiguration config;
 	private TokenManager tokens;
+	private TogglesFetcher toggles;
+	private MetricsPublisher metrics;
 	private CacheManager cacheManager;
 	private long cacheExpiresAt;
 	private Cache<String, StageToggles> togglesByClientId;
@@ -67,7 +75,7 @@ public class TogglesClient
 	 * @param clientSecret the secret for the associated client ID, provided when registering an application.
 	 */
 	public TogglesClient(String clientId, String clientSecret)
-	throws ClientException, TokenManagerException
+	throws TogglesException, TokenManagerException
 	{
 		this(new TogglesConfiguration(clientId, clientSecret));
 	}
@@ -77,19 +85,21 @@ public class TogglesClient
 	 * 
 	 * @param togglesConfiguration a TogglesConfiguration instance. Never null.
 	 * @throws TokenManagerException 
-	 * @throws ClientException if an error occurs during fetching of the remote toggles.
+	 * @throws TogglesException if an error occurs during fetching of the remote toggles.
 	 * @see {@link TogglesConfiguration.newClient()}
 	 */
 	public TogglesClient(TogglesConfiguration togglesConfiguration)
-	throws ClientException
+	throws TogglesException
 	{
 		super();
 		this.config = togglesConfiguration;
 		this.tokens = new TokenManagerImpl(togglesConfiguration);
+		this.toggles = new TogglesFetcher(tokens, togglesConfiguration);
 		this.cacheManager = CacheManagerBuilder.newCacheManagerBuilder().build();
 		this.cacheManager.init();
 		Unirest.setTimeouts(config.getConnectionTimeoutMillis(), config.getSocketTimeoutMillis());
 		configureJacksonObjectMapper();
+		configureEventing(config.getEventPollIntervalMillis());
 
 		if (config.shouldFetchOnStartup())
 		{
@@ -171,7 +181,7 @@ public class TogglesClient
 
 			return processContext(featureName, toggles, context, defaultValue);
 		}
-		catch (ClientException e)
+		catch (TogglesException e)
 		{
 			// TODO log exceptions
 			e.printStackTrace();
@@ -191,7 +201,7 @@ public class TogglesClient
 	}
 
 	private StageToggles fetchToggles()
-	throws ClientException
+	throws TogglesException
 	{
 		if (togglesByClientId == null)
 		{
@@ -218,17 +228,17 @@ public class TogglesClient
 	}
 
 	private StageToggles refreshCache()
-	throws ClientException
+	throws TogglesException
 	{
-		StageToggles toggles = getRemoteToggles();
+		StageToggles allToggles = toggles.fetch();
 
-		if (toggles != null)
+		if (allToggles != null)
 		{
-			togglesByClientId.put(config.getClientId(), toggles);
+			togglesByClientId.put(config.getClientId(), allToggles);
 			cacheExpiresAt = System.currentTimeMillis() + config.getCacheTtlMillis();
 		}
 
-		return toggles;
+		return allToggles;
 	}
 
 	private boolean processContext(String featureName, StageToggles toggles, TogglesContext context, boolean defaultValue)
@@ -236,45 +246,6 @@ public class TogglesClient
 		Boolean enabled = toggles.isFeatureEnabled(featureName);
 
 		return (enabled != null ? enabled : defaultValue);
-	}
-
-	private StageToggles getRemoteToggles()
-	throws ClientException
-	{
-		int retries = config.getMaxRetries();
-		HttpResponse<StageToggles> response = null;
-
-		try
-		{
-			while (retries-- >= 0)
-			{
-					response = Unirest.get(config.getTogglesEndpoint())
-						.header(HttpHeaders.AUTHORIZATION, tokens.getAccessToken())
-					    .header("accept", "application/json")
-					    .header("Content-Type", "application/json")
-						.asObject(StageToggles.class);
-	
-					if (response.getStatus() == 401) // assume needs a token refresh
-					{
-						tokens.newAccessToken();
-					}
-					else if (isSuccessful(response))
-					{
-						return response.getBody();
-					}
-			}
-		}
-		catch (UnirestException e)
-		{
-			throw new ClientException(e);
-		}
-
-		return null;
-	}
-
-	private boolean isSuccessful(HttpResponse<StageToggles> response)
-	{
-		return response.getStatus() >= 200 && response.getStatus() <= 299;
 	}
 
 	private void configureJacksonObjectMapper()
@@ -326,5 +297,13 @@ public class TogglesClient
 				}
 			}
 		});
+	}
+
+	private void configureEventing(long eventPollIntervalMillis)
+	{
+		LocalEventBus eventBus = new LocalEventBus(Collections.emptyList(), false, eventPollIntervalMillis);
+		eventBus.subscribe(config.getEventHandler());
+		eventBus.subscribe(new MetricsEventHandler());
+		Events.setEventBus(eventBus);
 	}
 }

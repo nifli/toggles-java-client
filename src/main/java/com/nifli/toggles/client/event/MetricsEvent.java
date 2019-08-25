@@ -13,12 +13,18 @@
 	See the License for the specific language governing permissions and
 	limitations under the License.
 */
-package com.nifli.toggles.client.domain;
+package com.nifli.toggles.client.event;
 
 /**
- * @author tfredrich
+ * @author toddf
+ * @since Aug 23, 2019
  */
-public class User
+public class MetricsEvent
+extends TogglesEvent
 {
-
+	@Override
+	public void observe(EventObserver observer)
+	{
+		observer.onMetrics(this);
+	}
 }

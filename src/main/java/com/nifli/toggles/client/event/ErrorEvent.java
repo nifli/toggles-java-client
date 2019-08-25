@@ -13,24 +13,36 @@
 	See the License for the specific language governing permissions and
 	limitations under the License.
 */
-package com.nifli.toggles.client;
+package com.nifli.toggles.client.event;
 
 /**
  * @author toddf
- * @since Apr 30, 2019
+ * @since Aug 23, 2019
  */
-public class ClientException
-extends Exception
+public class ErrorEvent
+extends TogglesEvent
 {
-	private static final long serialVersionUID = 8358780884094452562L;
+	private Throwable throwable;
 
-	public ClientException(Exception e)
+	public ErrorEvent(Throwable throwable)
 	{
-		super(e);
+		super();
+		this.throwable = throwable;
 	}
 
-	public ClientException(String message)
+	@Override
+	public void observe(EventObserver observer)
 	{
-		super(message);
+		observer.onError(this);
+	}
+
+	public Throwable getThrowable()
+	{
+		return throwable;
+	}
+
+	public String getMessage()
+	{
+		return throwable.getMessage();
 	}
 }

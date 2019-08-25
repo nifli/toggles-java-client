@@ -13,50 +13,32 @@
 	See the License for the specific language governing permissions and
 	limitations under the License.
 */
-package com.nifli.toggles.client.domain;
-
-import java.util.Collection;
+package com.nifli.toggles.client.event;
 
 /**
  * @author toddf
- * @since Apr 26, 2019
+ * @since Aug 23, 2019
  */
-public abstract class AbstractToggleResponse
+public class DefaultEventHandler
+implements EventHandler
 {
-	private String id;
-	private String name;
-	private String slug;
-	private String description;
-	private boolean enabled;
-	private Collection<Strategy> strategies;
+	private EventObserver observer;
 
-	public String getId()
+	public DefaultEventHandler(EventObserver observer)
 	{
-		return id;
+		super();
+		this.observer = observer;
 	}
 
-	public String getName()
+	@Override
+	public void handle(TogglesEvent event) throws Exception
 	{
-		return name;
+		event.observe(observer);
 	}
 
-	public String getSlug()
+	@Override
+	public boolean handles(Class<? extends TogglesEvent> eventClass)
 	{
-		return slug;
-	}
-
-	public String getDescription()
-	{
-		return description;
-	}
-
-	public Collection<Strategy> getStrategies()
-	{
-		return strategies;
-	}
-
-	public boolean isEnabled()
-	{
-		return enabled;
+		return true;
 	}
 }

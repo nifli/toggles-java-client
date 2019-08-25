@@ -13,50 +13,33 @@
 	See the License for the specific language governing permissions and
 	limitations under the License.
 */
-package com.nifli.toggles.client.domain;
+package com.nifli.toggles.client.event;
 
-import java.util.Collection;
+import java.util.Date;
 
 /**
  * @author toddf
- * @since Apr 26, 2019
+ * @since Aug 23, 2019
  */
-public abstract class AbstractToggleResponse
+public class ReadyEvent
+extends TogglesEvent
 {
-	private String id;
-	private String name;
-	private String slug;
-	private String description;
-	private boolean enabled;
-	private Collection<Strategy> strategies;
+	private Date readyAt;
 
-	public String getId()
+	public ReadyEvent(Date readyAt)
 	{
-		return id;
+		super();
+		this.readyAt = readyAt;
 	}
 
-	public String getName()
+	public Date getReadyAt()
 	{
-		return name;
+		return readyAt;
 	}
 
-	public String getSlug()
+	@Override
+	public void observe(EventObserver observer)
 	{
-		return slug;
-	}
-
-	public String getDescription()
-	{
-		return description;
-	}
-
-	public Collection<Strategy> getStrategies()
-	{
-		return strategies;
-	}
-
-	public boolean isEnabled()
-	{
-		return enabled;
+		observer.onReady(this);
 	}
 }

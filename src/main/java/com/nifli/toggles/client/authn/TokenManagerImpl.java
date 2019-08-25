@@ -3,12 +3,19 @@ package com.nifli.toggles.client.authn;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Date;
 import java.util.stream.Collectors;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.nifli.toggles.client.TogglesConfiguration;
+import com.nifli.toggles.client.event.AuthenticatedEvent;
+import com.nifli.toggles.client.event.ErrorEvent;
+import com.nifli.toggles.client.event.Events;
 
 /**
  * Acquires 'client_credentials' tokens (JWT) from the OAuth2 token endpoint. It does not validate the token or refresh it.
@@ -22,6 +29,8 @@ import com.nifli.toggles.client.TogglesConfiguration;
 public class TokenManagerImpl
 implements TokenManager
 {
+	private static final Logger LOG = LogManager.getLogger(TokenManagerImpl.class);
+
 	private static final String GRANT_TYPE = "client_credentials";
 	private static final String SCOPE = "programmatic_client";
 
@@ -84,6 +93,7 @@ implements TokenManager
 				if (isSuccessful(response))
 				{
 					setAccessToken(response.getBody().getAccessToken());
+					Events.publish(new AuthenticatedEvent(config.getClientId(), new Date(System.currentTimeMillis())));
 					return;
 				}
 				else if (isFatal(response)) // Don't retry
@@ -93,6 +103,7 @@ implements TokenManager
 
 				try
 				{
+					LOG.info("Authentication failed. Retrying");
 					Thread.sleep(config.getRetryDelayMillis() * (config.getMaxRetries() - retries));
 				}
 				catch (InterruptedException e)
@@ -129,7 +140,9 @@ implements TokenManager
 	{
 		try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getRawBody())))
 		{
-			throw new TokenManagerException(response.getStatus(), br.lines().collect(Collectors.joining(System.lineSeparator())));
+			TokenManagerException e = new TokenManagerException(response.getStatus(), br.lines().collect(Collectors.joining(System.lineSeparator())));
+			Events.publish(new ErrorEvent(e));
+			throw e;
 		}
 		catch (IOException e)
 		{

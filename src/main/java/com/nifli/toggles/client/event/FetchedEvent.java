@@ -13,50 +13,33 @@
 	See the License for the specific language governing permissions and
 	limitations under the License.
 */
-package com.nifli.toggles.client.domain;
+package com.nifli.toggles.client.event;
 
-import java.util.Collection;
+import com.nifli.toggles.client.domain.StageToggles;
 
 /**
  * @author toddf
- * @since Apr 26, 2019
+ * @since Aug 23, 2019
  */
-public abstract class AbstractToggleResponse
+public class FetchedEvent
+extends TogglesEvent
 {
-	private String id;
-	private String name;
-	private String slug;
-	private String description;
-	private boolean enabled;
-	private Collection<Strategy> strategies;
+	private StageToggles toggles;
 
-	public String getId()
+	public FetchedEvent(StageToggles toggles)
 	{
-		return id;
+		super();
+		this.toggles = toggles;
 	}
 
-	public String getName()
+	@Override
+	public void observe(EventObserver observer)
 	{
-		return name;
+		observer.onFetched(this);
 	}
 
-	public String getSlug()
+	public StageToggles getToggles()
 	{
-		return slug;
-	}
-
-	public String getDescription()
-	{
-		return description;
-	}
-
-	public Collection<Strategy> getStrategies()
-	{
-		return strategies;
-	}
-
-	public boolean isEnabled()
-	{
-		return enabled;
+		return toggles;
 	}
 }

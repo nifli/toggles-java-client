@@ -8,6 +8,11 @@ public class StageToggles
 	private Map<String, ReleaseToggle> releases;
 	private Map<String, FeatureToggle> features;
 
+	public Stage getStage()
+	{
+		return stage;
+	}
+
 	public FeatureToggle getFeatureToggle(String name)
 	{
 		return (features != null ? features.get(name) : null);

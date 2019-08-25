@@ -13,50 +13,45 @@
 	See the License for the specific language governing permissions and
 	limitations under the License.
 */
-package com.nifli.toggles.client.domain;
-
-import java.util.Collection;
+package com.nifli.toggles.client.event;
 
 /**
+ * An empty, do-nothing implementation of TogglesEventObserver.
+ * 
  * @author toddf
- * @since Apr 26, 2019
+ * @since Aug 23, 2019
+ * @see EventObserver
  */
-public abstract class AbstractToggleResponse
+public abstract class AbstractEventObserver
+implements EventObserver
 {
-	private String id;
-	private String name;
-	private String slug;
-	private String description;
-	private boolean enabled;
-	private Collection<Strategy> strategies;
-
-	public String getId()
+	@Override
+	public void onAuthenticated(AuthenticatedEvent authenticatedEvent)
 	{
-		return id;
 	}
 
-	public String getName()
+	@Override
+	public void onError(ErrorEvent exception)
 	{
-		return name;
 	}
 
-	public String getSlug()
+	@Override
+	public void onReady(ReadyEvent ready)
 	{
-		return slug;
 	}
 
-	public String getDescription()
+	@Override
+	public void onFetched(FetchedEvent fetched)
 	{
-		return description;
 	}
 
-	public Collection<Strategy> getStrategies()
+	@Override
+	public void onEvalutated(EvaluatedEvent evaluated)
 	{
-		return strategies;
 	}
 
-	public boolean isEnabled()
+	@Override
+	public void onMetrics(MetricsEvent metrics)
 	{
-		return enabled;
 	}
 }
