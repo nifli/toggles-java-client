@@ -23,9 +23,21 @@ public class FeatureToggle
 extends AbstractToggleResponse
 {
 	private Release release;
+	private Boolean featureEnabled;
+	private Boolean releaseEnabled;
 
 	public String getReleaseId()
 	{
 		return (release != null ? release.getId() : null);
+	}
+
+	public boolean isFeatureEnabled()
+	{
+		return (featureEnabled != null ? featureEnabled : false);
+	}
+
+	public boolean isReleaseEnabled()
+	{
+		return (releaseEnabled != null ? releaseEnabled: false);
 	}
 }

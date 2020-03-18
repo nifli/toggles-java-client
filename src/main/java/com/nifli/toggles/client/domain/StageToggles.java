@@ -5,7 +5,6 @@ import java.util.Map;
 public class StageToggles
 {
 	private Stage stage;
-	private Map<String, ReleaseToggle> releases;
 	private Map<String, FeatureToggle> features;
 
 	public Stage getStage()
@@ -18,23 +17,15 @@ public class StageToggles
 		return (features != null ? features.get(name) : null);
 	}
 
-	public ReleaseToggle getReleaseToggle(String releaseId)
-	{
-		if (releaseId == null) return null;
-
-		return (releases != null ? releases.get(releaseId) : null);
-	}
-
+	/**
+	 * Returns a boolean value if the feature name exists in the toggles list, otherwise null.
+	 * 
+	 * @param name the name of the feature toggle to check.
+	 * @return true or false showing the status of the feature toggle. Null if the feature toggle name doesn't exist in the retrieved set of stage toggles.
+	 */
 	public Boolean isFeatureEnabled(String name)
 	{
 		FeatureToggle ft = getFeatureToggle(name);
-
-		if (ft == null) return null;
-
-		if (ft.isEnabled()) return true;
-
-		ReleaseToggle rt = getReleaseToggle(ft.getReleaseId());
-
-		return (rt != null ? rt.isEnabled() : false);
+		return (ft != null ? ft.isEnabled() : null);
 	}
 }
