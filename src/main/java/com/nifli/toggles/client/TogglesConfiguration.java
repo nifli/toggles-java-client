@@ -53,6 +53,7 @@ public class TogglesConfiguration
 	private long metricsPublishIntervalSeconds = DEFAULT_METRICS_PUBLISH_INTERVAL;
 	private long eventPollIntervalMillis = DEFAULT_EVENT_POLL_INTERVAL;
 	private EventHandler eventHandler = new DefaultEventHandler(new DefaultEventObserver());
+
 	/**
 	 * Create a new feature flag configuration instance using the clientId and secret for this application.
 	 * 

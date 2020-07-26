@@ -46,7 +46,10 @@ import com.nifli.toggles.client.metrics.MetricsEventHandler;
 import com.nifli.toggles.client.metrics.MetricsPublisher;
 
 /**
- * The controlling class for all feature flag decisions.
+ * The Root class for the Toggles Java API Client. It is the controlling class for all feature flag decisions.
+ * 
+ * This is a "confidential" client, in that it can only be used on the server-side of an application, for example
+ * in a web server-based application.
  * 
  * @author tfredrich
  */
