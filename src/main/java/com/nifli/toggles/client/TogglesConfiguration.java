@@ -35,6 +35,10 @@ public class TogglesConfiguration
 	private static final long DEFAULT_METRICS_PUBLISH_INTERVAL = 30l;
 	private static final long DEFAULT_EVENT_POLL_INTERVAL = 0l;
 
+	//TODO: write toggles to JSON file locally (if set).
+	//TODO: read toggles from JSON file on startup (if set).
+	//TODO: read/write toggles from any DB/config plugin (if set).
+
 	private char[] clientId;
 	private char[] clientSecret;
 	private String instanceId;
@@ -240,7 +244,7 @@ public class TogglesConfiguration
 		return stage;
 	}
 
-	public TogglesClient newClient()
+	public TogglesClient newTogglesClient()
 	throws TogglesException
 	{
 		return new TogglesClient(this);
@@ -296,6 +300,16 @@ public class TogglesConfiguration
 	public long getEventPollIntervalMillis()
 	{
 		return eventPollIntervalMillis;
+	}
+
+	public long getMetricsPublishIntervalSeconds()
+	{
+		return metricsPublishIntervalSeconds;
+	}
+
+	public void setMetricsPublishIntervalSeconds(long metricsPublishIntervalSeconds)
+	{
+		this.metricsPublishIntervalSeconds = metricsPublishIntervalSeconds;
 	}
 
 	public EventHandler getEventHandler()
