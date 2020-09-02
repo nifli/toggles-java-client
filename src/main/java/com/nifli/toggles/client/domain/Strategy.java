@@ -31,10 +31,12 @@ public class Strategy
 	{
 		return id;
 	}
+
 	public String getName()
 	{
 		return name;
 	}
+
 	public Map<String, String> getParameters()
 	{
 		return parameters;
