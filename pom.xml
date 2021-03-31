@@ -2,13 +2,13 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.strategicgains</groupId>
-  <artifactId>schema-generator</artifactId>
+  <groupId>com.nifli</groupId>
+  <artifactId>toggles-client-java</artifactId>
   <version>1.0.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
-  <name>Schema Generator</name>
-  <url>https://github.com/tfredrich/schema-generator</url>
+  <name>toggles-client-java</name>
+  <url>https://github.com/nifli/toggles-java-client</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -16,15 +16,25 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>com.github.victools</groupId>
-			<artifactId>jsonschema-generator</artifactId>
-			<version>4.16.0</version>
+			<groupId>com.mashape.unirest</groupId>
+			<artifactId>unirest-java</artifactId>
+			<version>1.4.9</version>
 		</dependency>
 		<dependency>
-			<groupId>com.strategicgains</groupId>
-			<artifactId>syntaxe</artifactId>
-			<version>1.1-SNAPSHOT</version>
+			<groupId>org.ehcache</groupId>
+			<artifactId>ehcache</artifactId>
+			<version>3.7.1</version>
 		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>2.9.10.5</version>
+		</dependency>
+		<dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>2.11.1</version>
+        </dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -93,13 +103,13 @@
 	</build>
 	<issueManagement>
 		<system>GitHub.com</system>
-		<url>https://github.com/tfredrich/schema-generator/issues</url>
+		<url>https://github.com/RestExpress/RestExpress/issues</url>
 	</issueManagement>
 
 	<scm>
-		<url>git@github.com:tfredrich/schema-generator.git</url>
-		<connection>scm:git:git@github.com:tfredrich/schema-generator.git</connection>
-		<developerConnection>scm:git:git@github.com:tfredrich/schema-generator.git</developerConnection>
+		<url>git@github.com:nifli/toggles-java-client.git</url>
+		<connection>scm:git:git@github.com:nifli/toggles-java-client.git</connection>
+		<developerConnection>scm:git:git@github.com:nifli/toggles-java-client.git</developerConnection>
 		<tag>HEAD</tag>
 	</scm>
 
